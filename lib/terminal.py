@@ -24,6 +24,8 @@ class Terminal(Sprite):
         self.newLine = []
         self.linesInput = []
         self.linesResponse = []
+        self.linesHistory = []
+        self.linesHistoryIdx = 0
         self.cursor = -2
         self.cursorBlink = True
         self.cursorBlinkCycles = 0
@@ -53,6 +55,9 @@ class Terminal(Sprite):
         self.playerInput()
         self.updateDisplay()
 
+    def allowNewLineEntry(self):
+        return (len(self.newLine) <= (self.columns - 4))
+
     def playerInput(self):
         for event in pygame.event.get(pygame.KEYUP):
             if event.key == pygame.K_BACKSPACE:
@@ -62,12 +67,58 @@ class Terminal(Sprite):
             elif event.key == pygame.K_RETURN:
                 self.pushNewLine()
 
+            elif event.key == pygame.K_QUOTE:
+                if self.allowNewLineEntry():
+                    self.newLine.append(self.availableKeys.find("'"))
+
+            elif event.key == pygame.K_QUOTEDBL:
+                if self.allowNewLineEntry():
+                    self.newLine.append(self.availableKeys.find("\""))
+
+            elif event.key == pygame.K_EXCLAIM:
+                if self.allowNewLineEntry():
+                    self.newLine.append(self.availableKeys.find("!"))
+
+            elif event.key == pygame.K_EXCLAIM:
+                if self.allowNewLineEntry():
+                    self.newLine.append(self.availableKeys.find("!"))
+
+            elif event.key == pygame.K_QUESTION:
+                if self.allowNewLineEntry():
+                    self.newLine.append(self.availableKeys.find("?"))
+
+            elif event.key == pygame.K_UP:
+                historyCount = len(self.linesHistory)
+                if historyCount < 1:
+                    return
+
+                if self.linesHistoryIdx >= historyCount:
+                    self.linesHistoryIdx = historyCount - 1
+
+                history = [h for h in reversed(self.linesHistory)]
+                self.newLine = history[self.linesHistoryIdx]
+                self.linesHistoryIdx += 1
+
+            elif event.key == pygame.K_DOWN:
+                self.linesHistoryIdx -= 1
+                if self.linesHistoryIdx < 0:
+                    self.linesHistoryIdx = 0
+                    self.newLine = []
+                    return
+
+                history = [h for h in reversed(self.linesHistory)]
+                self.newLine = history[self.linesHistoryIdx]
+
+            elif event.key == pygame.K_CLEAR:
+                self.runCommand("clear")
+
             else:
-                if len(self.newLine) <= (self.columns - 4):
+                if self.allowNewLineEntry():
                     self.newLine.append(
                         self.availableKeys.find(chr(event.key)))
 
     def pushNewLine(self):
+        self.linesHistory.append(self.newLine)
         self.linesInput.append(
             [self.translate(">")[0]] + self.newLine)
         playerInput = "".join(self.translate(self.newLine)).lower()
