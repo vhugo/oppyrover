@@ -28,6 +28,74 @@ class GameAsset(pygame.sprite.Sprite):
 
 
 class Rover(GameAsset):
+    north = (0, -1)
+    northeast = (1, -1)
+    northwest = (-1, -1)
+    south = (0, 1)
+    southeast = (1, 1)
+    southwest = (-1, 1)
+    east = (1, 0)
+    west = (-1, 0)
+    locationQueue = []
+    currentlocation = (0, 0)
+
+    def drive(self, distance, direction):
+        travel = self.mmap.tileSize[1] * distance
+
+        # map moviment
+        vposx = self.mmap.viewPosition[0]
+        vposy = self.mmap.viewPosition[1]
+        if self.rect.x == 0:
+            vposx = self.mmap.viewPosition[0] + (travel * direction[0])
+            if vposx > self.mmap.mapSize[0]:
+                vposx = self.mmap.mapSize[0]
+
+        if self.rect.y == 0:
+            vposy = self.mmap.viewPosition[1] + (travel * direction[1])
+            if vposy > self.mmap.mapSize[1]:
+                vposy = self.mmap.mapSize[1]
+
+        self.mmap.viewPosition = (vposx, vposy)
+
+        #  Rover moviment
+        if self.mmap.viewPosition[0] == self.mmap.mapSize[0]:
+            mxmapX = self.mmap.viewSize[0] - (self.mmap.tileSize[0] * 2)
+            roverX = self.rect.x + (travel * direction[0])
+
+            if direction[0] > 0 and roverX > mxmapX:
+                self.rect.x = mxmapX
+
+            elif direction[0] < 0 and roverX < 0:
+                self.rect.x = 0
+
+            else:
+                self.rect.x = roverX
+
+            self.mmap.viewUpdate = True
+
+        if self.mmap.viewPosition[1] == self.mmap.mapSize[1]:
+            mxmapY = self.mmap.viewSize[1] - (self.mmap.tileSize[1] * 2)
+            roverY = self.rect.y + (travel * direction[1])
+
+            if direction[1] > 0 and roverY > mxmapY:
+                self.rect.y = mxmapY
+
+            elif direction[1] < 0 and roverY < 0:
+                self.rect.y = 0
+
+            else:
+                self.rect.y = roverY
+
+            self.mmap.viewUpdate = True
+
+        print(
+            "%5d:rect.x" % self.rect.x,
+            "%5d:rect.y" % self.rect.y,
+            "%5d:vposx" % vposx,
+            "%5d:vposy" % vposy,
+            "viewSize %5d:x %5d:y" % self.mmap.viewSize,
+            "viewPosition: %5d:x %5d:y" % self.mmap.viewPosition,
+            "mapSize: %5d:x %5d:y" % self.mmap.mapSize)
 
     def update(self):
         # Process player Input

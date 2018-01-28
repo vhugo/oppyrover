@@ -4,6 +4,15 @@ import re
 from lib.imageloader import imageLoader
 from lib.gameobjects import Sprite
 
+NORTH = (0, -1)
+NORTHEAST = (1, -1)
+NORTHWEST = (-1, -1)
+SOUTH = (0, 1)
+SOUTHEAST = (1, 1)
+SOUTHWEST = (-1, 1)
+EAST = (1, 0)
+WEST = (-1, 0)
+
 
 class Terminal(Sprite):
     keyRepeatTimeout = 0
@@ -134,7 +143,7 @@ class Terminal(Sprite):
         self.newLine = []
 
     def runCommand(self, cmd):
-        cmdMove = re.compile(r"move (\d+)(\w{,2})")
+        cmdDrive = re.compile(r"drive (\d+)(\w{,2})")
         cmdClear = re.compile(r"^clear$")
         # cmdHelp = re.compile(r"^help$")
 
@@ -144,41 +153,52 @@ class Terminal(Sprite):
             self.linesResponse = []
             return None
 
-        match = cmdMove.match(cmd)
+        match = cmdDrive.match(cmd)
         if match:
             distance = int(match.group(1))
             direction = match.group(2)
             directionName = None
+            directionXY = None
 
             if direction == "n":
                 directionName = "north"
+                directionXY = (0, -1)
 
             elif direction == "ne":
                 directionName = "northeast"
+                directionXY = (1, -1)
 
             elif direction == "e":
                 directionName = "east"
+                directionXY = (1, 0)
 
             elif direction == "se":
                 directionName = "southeast"
+                directionXY = (1, 1)
 
             elif direction == "s":
                 directionName = "south"
+                directionXY = (0, 1)
 
             elif direction == "sw":
                 directionName = "southwest"
+                directionXY = (-1, 1)
 
             elif direction == "w":
                 directionName = "west"
+                directionXY = (-1, 0)
 
             elif direction == "w":
                 directionName = "northwest"
+                directionXY = (-1, -1)
 
-            if directionName is not None:
-                return "moving %d meters %s..." % (
+            if directionName is not None and directionXY is not None:
+                self.rover.drive(distance, directionXY)
+
+                return "driving %d meters %s..." % (
                     distance, directionName)
             else:
-                return "can't move towards '%s'" % direction
+                return "can't drive towards '%s'" % direction
 
         return "command not found.try 'help'"
 
