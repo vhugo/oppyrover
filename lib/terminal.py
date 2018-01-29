@@ -4,15 +4,6 @@ import re
 from lib.imageloader import imageLoader
 from lib.gameobjects import Sprite
 
-NORTH = (0, -1)
-NORTHEAST = (1, -1)
-NORTHWEST = (-1, -1)
-SOUTH = (0, 1)
-SOUTHEAST = (1, 1)
-SOUTHWEST = (-1, 1)
-EAST = (1, 0)
-WEST = (-1, 0)
-
 
 class Terminal(Sprite):
     keyRepeatTimeout = 0
@@ -143,7 +134,7 @@ class Terminal(Sprite):
         self.newLine = []
 
     def runCommand(self, cmd):
-        cmdDrive = re.compile(r"drive (\d+)(\w{,2})")
+        cmdDrive = re.compile(r"\s*drive\s*(\d+)\s*(\w{,2})")
         cmdClear = re.compile(r"^clear$")
         # cmdHelp = re.compile(r"^help$")
 
