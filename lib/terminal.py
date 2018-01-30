@@ -1,3 +1,4 @@
+import sys
 import pygame
 import re
 
@@ -32,6 +33,37 @@ class Terminal(Sprite):
         self.keyPressed = ()
         super().__init__("images/text.png")
 
+    def runCommand(self, cmd):
+        cmdDrive = re.compile(r"\s*d(rive)?\s*(\d+)\s*(\w{,2})")
+        cmdClear = re.compile(r"^c(lear)?$")
+        cmdQuit = re.compile(r"^q(uit)?$")
+        # cmdHelp = re.compile(r"^help$")
+
+        match = cmdQuit.match(cmd)
+        if match:
+            sys.exit()
+            return None
+
+        match = cmdClear.match(cmd)
+        if match:
+            self.linesInput = []
+            self.linesResponse = []
+            return None
+
+        match = cmdDrive.match(cmd)
+        if match:
+            distance = int(match.group(2))
+            direction = match.group(3)
+
+            for d in Direction:
+                if direction == d.shortname:
+                    self.rover.drive(distance, d.xy)
+                    return "driving %d meters %s..." % (distance, d.fullname)
+
+            return "can't drive towards '%s'" % direction
+
+        return "command not found.try 'help'"
+
     def loadSprite(self):
         posy = 0
         posx = 0
@@ -63,6 +95,9 @@ class Terminal(Sprite):
             if event.key == pygame.K_BACKSPACE:
                 if len(self.newLine) > 0:
                     del self.newLine[-1]
+
+            elif event.key == pygame.K_ESCAPE:
+                self.newLine = []
 
             elif event.key == pygame.K_RETURN:
                 self.pushNewLine()
@@ -129,31 +164,6 @@ class Terminal(Sprite):
             del self.linesResponse[0]
 
         self.newLine = []
-
-    def runCommand(self, cmd):
-        cmdDrive = re.compile(r"\s*d(rive)?\s*(\d+)\s*(\w{,2})")
-        cmdClear = re.compile(r"^c(lear)?$")
-        # cmdHelp = re.compile(r"^help$")
-
-        match = cmdClear.match(cmd)
-        if match:
-            self.linesInput = []
-            self.linesResponse = []
-            return None
-
-        match = cmdDrive.match(cmd)
-        if match:
-            distance = int(match.group(2))
-            direction = match.group(3)
-
-            for d in Direction:
-                if direction == d.shortname:
-                    self.rover.drive(distance, d.xy)
-                    return "driving %d meters %s..." % (distance, d.fullname)
-
-            return "can't drive towards '%s'" % direction
-
-        return "command not found.try 'help'"
 
     def translate(self, text):
         newText = []
