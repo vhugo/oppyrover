@@ -39,7 +39,7 @@ gameObjects.append(terminal)
 
 # draw map
 mapSize = (screenSize[0], screenSize[1] - terminal.image.get_height())
-mmap.viewSize = mapSize
+mmap.setViewSize(mapSize)
 screen.blit(mmap.drawMap(), (0, 0))
 
 cycle = 0

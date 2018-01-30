@@ -134,12 +134,18 @@ abcdefghijklmnopqrstttttttttttttttttttttttttttttttttsrqponmlkjihgfedcba
         mapYs = [m for m in self.fullMap.split("\n")[:-1]]
         self.mapArray = [[my for my in m] for m in mapYs[1:]]
 
-        fullMapHeight = self.tileSize[1] * len(mapYs[1:])
-        fullMapWidth = self.tileSize[0] * len(self.mapArray[0])
+        self.fullMapHeight = self.tileSize[1] * len(mapYs[1:])
+        self.fullMapWidth = self.tileSize[0] * len(self.mapArray[0])
 
         # We need only what we can fit on the screen
-        mapWidth = fullMapWidth - self.viewSize[0]
-        mapHeight = fullMapHeight - self.viewSize[1]
+        mapWidth = self.fullMapWidth - self.viewSize[0]
+        mapHeight = self.fullMapHeight - self.viewSize[1]
+        self.mapSize = (mapWidth, mapHeight)
+
+    def setViewSize(self, viewSize):
+        mapWidth = self.fullMapWidth - viewSize[0]
+        mapHeight = self.fullMapHeight - viewSize[1]
+        self.viewSize = viewSize
         self.mapSize = (mapWidth, mapHeight)
 
     def updated(self):
