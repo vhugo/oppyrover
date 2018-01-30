@@ -1,6 +1,28 @@
 import pygame
 
 from lib.imageloader import imageLoader
+from enum import Enum
+
+
+class Direction(Enum):
+    NORTH = ("n", "north", 0, -1)
+    NORTHEAST = ("ne", "northeast", 1, -1)
+    EAST = ("e", "east", 1, 0)
+    SOUTHEAST = ("se", "southeast", 1, 1)
+    SOUTH = ("s", "south", 0, 1)
+    SOUTHWEST = ("sw", "southwest", -1, 1)
+    WEST = ("w", "west", -1, 0)
+    NORTHWEST = ("nw", "northwest", -1, -1)
+
+    def __init__(self, shortname, fullname, x, y):
+        self.shortname = shortname
+        self.fullname = fullname
+        self.x = x
+        self.y = y
+
+    @property
+    def xy(self):
+        return (self.x, self.y)
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -28,48 +50,43 @@ class GameAsset(pygame.sprite.Sprite):
 
 
 class Rover(GameAsset):
-    north = (0, -1)
-    northeast = (1, -1)
-    northwest = (-1, -1)
-    south = (0, 1)
-    southeast = (1, 1)
-    southwest = (-1, 1)
-    east = (1, 0)
-    west = (-1, 0)
     locationQueue = []
     currentlocation = (0, 0)
 
     def drive(self, distance, direction):
-        travel = self.mmap.tileSize[1] * distance
+        x = 0
+        y = 1
+
+        travel = self.mmap.tileSize[x] * distance
 
         # map moviment
-        vposx = self.mmap.viewPosition[0]
-        vposy = self.mmap.viewPosition[1]
+        vposx = self.mmap.viewPosition[x]
+        vposy = self.mmap.viewPosition[y]
         if self.rect.x == 0:
-            vposx = self.mmap.viewPosition[0] + (travel * direction[0])
-            if vposx > self.mmap.mapSize[0]:
-                vposx = self.mmap.mapSize[0]
+            vposx = self.mmap.viewPosition[x] + (travel * direction[x])
+            if vposx > self.mmap.mapSize[x]:
+                vposx = self.mmap.mapSize[x]
             elif vposx < 0:
                 vposx = 0
 
         if self.rect.y == 0:
-            vposy = self.mmap.viewPosition[1] + (travel * direction[1])
-            if vposy > self.mmap.mapSize[1]:
-                vposy = self.mmap.mapSize[1]
+            vposy = self.mmap.viewPosition[y] + (travel * direction[y])
+            if vposy > self.mmap.mapSize[y]:
+                vposy = self.mmap.mapSize[y]
             elif vposy < 0:
                 vposy = 0
 
         self.mmap.viewPosition = (vposx, vposy)
 
         #  Rover moviment
-        if self.mmap.viewPosition[0] == self.mmap.mapSize[0]:
-            mxmapX = self.mmap.viewSize[0] - (self.mmap.tileSize[0] * 2)
-            roverX = self.rect.x + (travel * direction[0])
+        if self.mmap.viewPosition[x] == self.mmap.mapSize[x]:
+            mxmapX = self.mmap.viewSize[x] - (self.mmap.tileSize[x] * 2)
+            roverX = self.rect.x + (travel * direction[x])
 
-            if direction[0] > 0 and roverX > mxmapX:
+            if direction[x] > 0 and roverX > mxmapX:
                 self.rect.x = mxmapX
 
-            elif direction[0] < 0 and roverX < 0:
+            elif direction[x] < 0 and roverX < 0:
                 self.rect.x = 0
 
             else:
@@ -77,14 +94,14 @@ class Rover(GameAsset):
 
             self.mmap.viewUpdate = True
 
-        if self.mmap.viewPosition[1] == self.mmap.mapSize[1]:
-            mxmapY = self.mmap.viewSize[1] - (self.mmap.tileSize[1] * 2)
-            roverY = self.rect.y + (travel * direction[1])
+        if self.mmap.viewPosition[y] == self.mmap.mapSize[y]:
+            mxmapY = self.mmap.viewSize[y] - (self.mmap.tileSize[y] * 2)
+            roverY = self.rect.y + (travel * direction[y])
 
-            if direction[1] > 0 and roverY > mxmapY:
+            if direction[y] > 0 and roverY > mxmapY:
                 self.rect.y = mxmapY
 
-            elif direction[1] < 0 and roverY < 0:
+            elif direction[y] < 0 and roverY < 0:
                 self.rect.y = 0
 
             else:

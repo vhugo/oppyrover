@@ -2,7 +2,7 @@ import pygame
 import re
 
 from lib.imageloader import imageLoader
-from lib.gameobjects import Sprite
+from lib.gameobjects import Sprite, Direction
 
 
 class Terminal(Sprite):
@@ -79,10 +79,6 @@ class Terminal(Sprite):
                 if self.allowNewLineEntry():
                     self.newLine.append(self.availableKeys.find("!"))
 
-            elif event.key == pygame.K_EXCLAIM:
-                if self.allowNewLineEntry():
-                    self.newLine.append(self.availableKeys.find("!"))
-
             elif event.key == pygame.K_QUESTION:
                 if self.allowNewLineEntry():
                     self.newLine.append(self.availableKeys.find("?"))
@@ -114,8 +110,9 @@ class Terminal(Sprite):
 
             else:
                 if self.allowNewLineEntry():
-                    self.newLine.append(
-                        self.availableKeys.find(chr(event.key)))
+                    key = self.availableKeys.find(chr(event.key))
+                    if key >= 0:
+                        self.newLine.append(key)
 
     def pushNewLine(self):
         self.linesHistory.append(self.newLine)
@@ -134,8 +131,8 @@ class Terminal(Sprite):
         self.newLine = []
 
     def runCommand(self, cmd):
-        cmdDrive = re.compile(r"\s*drive\s*(\d+)\s*(\w{,2})")
-        cmdClear = re.compile(r"^clear$")
+        cmdDrive = re.compile(r"\s*d(rive)?\s*(\d+)\s*(\w{,2})")
+        cmdClear = re.compile(r"^c(lear)?$")
         # cmdHelp = re.compile(r"^help$")
 
         match = cmdClear.match(cmd)
@@ -146,50 +143,15 @@ class Terminal(Sprite):
 
         match = cmdDrive.match(cmd)
         if match:
-            distance = int(match.group(1))
-            direction = match.group(2)
-            directionName = None
-            directionXY = None
+            distance = int(match.group(2))
+            direction = match.group(3)
 
-            if direction == "n":
-                directionName = "north"
-                directionXY = (0, -1)
+            for d in Direction:
+                if direction == d.shortname:
+                    self.rover.drive(distance, d.xy)
+                    return "driving %d meters %s..." % (distance, d.fullname)
 
-            elif direction == "ne":
-                directionName = "northeast"
-                directionXY = (1, -1)
-
-            elif direction == "e":
-                directionName = "east"
-                directionXY = (1, 0)
-
-            elif direction == "se":
-                directionName = "southeast"
-                directionXY = (1, 1)
-
-            elif direction == "s":
-                directionName = "south"
-                directionXY = (0, 1)
-
-            elif direction == "sw":
-                directionName = "southwest"
-                directionXY = (-1, 1)
-
-            elif direction == "w":
-                directionName = "west"
-                directionXY = (-1, 0)
-
-            elif direction == "w":
-                directionName = "northwest"
-                directionXY = (-1, -1)
-
-            if directionName is not None and directionXY is not None:
-                self.rover.drive(distance, directionXY)
-
-                return "driving %d meters %s..." % (
-                    distance, directionName)
-            else:
-                return "can't drive towards '%s'" % direction
+            return "can't drive towards '%s'" % direction
 
         return "command not found.try 'help'"
 
