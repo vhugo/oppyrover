@@ -50,14 +50,31 @@ class GameAsset(pygame.sprite.Sprite):
 
 
 class Rover(GameAsset):
-    locationQueue = []
-    currentlocation = (0, 0)
+    targetDistance = 0
+    targetDirection = (0, 0)
+    speed = 1
 
     def drive(self, distance, direction):
+        self.targetDistance = self.mmap.tileSize[0] * distance
+        self.targetDirection = direction
+
+    def update(self):
+        self.setMotion()
+
+        # Continue update
+        super().update()
+
+    def setMotion(self):
+        if self.targetDistance <= 0:
+            return
+        else:
+            self.targetDistance -= self.speed
+
         x = 0
         y = 1
 
-        travel = self.mmap.tileSize[x] * distance
+        direction = self.targetDirection
+        travel = self.speed
 
         # map moviment
         vposx = self.mmap.viewPosition[x]
@@ -80,7 +97,7 @@ class Rover(GameAsset):
 
         #  Rover moviment
         if self.mmap.viewPosition[x] == self.mmap.mapSize[x]:
-            mxmapX = self.mmap.viewSize[x] - (self.mmap.tileSize[x] * 2)
+            mxmapX = self.mmap.viewSize[x] - self.mmap.tileSize[x]
             roverX = self.rect.x + (travel * direction[x])
 
             if direction[x] > 0 and roverX > mxmapX:
@@ -95,7 +112,7 @@ class Rover(GameAsset):
             self.mmap.viewUpdate = True
 
         if self.mmap.viewPosition[y] == self.mmap.mapSize[y]:
-            mxmapY = self.mmap.viewSize[y] - (self.mmap.tileSize[y] * 2)
+            mxmapY = self.mmap.viewSize[y] - self.mmap.tileSize[y]
             roverY = self.rect.y + (travel * direction[y])
 
             if direction[y] > 0 and roverY > mxmapY:
@@ -109,48 +126,30 @@ class Rover(GameAsset):
 
             self.mmap.viewUpdate = True
 
-        print(
-            "%5d:rect.x" % self.rect.x,
-            "%5d:rect.y" % self.rect.y,
-            "%5d:vposx" % vposx,
-            "%5d:vposy" % vposy,
-            "viewSize %5d:x %5d:y" % self.mmap.viewSize,
-            "viewPosition: %5d:x %5d:y" % self.mmap.viewPosition,
-            "mapSize: %5d:x %5d:y" % self.mmap.mapSize)
+        # print(
+        #     "%5d:rect.x" % self.rect.x,
+        #     "%5d:rect.y" % self.rect.y,
+        #     "%5d:vposx" % vposx,
+        #     "%5d:vposy" % vposy,
+        #     "viewSize %5d:x %5d:y" % self.mmap.viewSize,
+        #     "viewPosition: %5d:x %5d:y" % self.mmap.viewPosition,
+        #     "mapSize: %5d:x %5d:y" % self.mmap.mapSize)
 
-    def update(self):
-        # Process player Input
-        # controls = self.getPlayerInput()
-        # self.setMotion(controls)
-        # self.setAngle(controls)
+        # vposx = self.mmap.viewPosition[0]
+        # vposy = self.mmap.viewPosition[1]
 
-        # Continue update
-        super().update()
+        # # map position
+        # if controls[0] and self.mmap.viewPosition[1] > 0:
+        #     vposy += self.mmap.tileSize[1] * -1
 
-    def getPlayerInput(self):
-        pass
-        # up = pygame.key.get_pressed()[pygame.K_UP]
-        # right = pygame.key.get_pressed()[pygame.K_RIGHT]
-        # down = pygame.key.get_pressed()[pygame.K_DOWN]
-        # left = pygame.key.get_pressed()[pygame.K_LEFT]
-        # return (up, right, down, left)
+        # elif controls[2] and self.mmap.viewPosition[1] < self.mmap.mapSize[1]:
+        #     vposy += self.mmap.tileSize[1]
 
-    def setMotion(self, controls):
-        vposx = self.mmap.viewPosition[0]
-        vposy = self.mmap.viewPosition[1]
+        # elif controls[3] and self.mmap.viewPosition[0] > 0:
+        #     vposx += self.mmap.tileSize[0] * -1
 
-        # map position
-        if controls[0] and self.mmap.viewPosition[1] > 0:
-            vposy += self.mmap.tileSize[1] * -1
-
-        elif controls[2] and self.mmap.viewPosition[1] < self.mmap.mapSize[1]:
-            vposy += self.mmap.tileSize[1]
-
-        elif controls[3] and self.mmap.viewPosition[0] > 0:
-            vposx += self.mmap.tileSize[0] * -1
-
-        elif controls[1] and self.mmap.viewPosition[0] < self.mmap.mapSize[0]:
-            vposx += self.mmap.tileSize[0]
+        # elif controls[1] and self.mmap.viewPosition[0] < self.mmap.mapSize[0]:
+        #     vposx += self.mmap.tileSize[0]
 
         # print(
         #     "rectX: %5d" % self.rect.x,
@@ -165,31 +164,31 @@ class Rover(GameAsset):
         #     "mapSize: %5d" % self.mmap.mapSize[1])
 
         # rover position
-        if controls[0] and \
-                self.mmap.viewPosition[1] <= 0 and \
-                self.rect.y >= self.mmap.tileSize[1]:
-            self.rect.y += self.mmap.tileSize[1] * -1
-            self.mmap.viewUpdate = True
+        # if controls[0] and \
+        #         self.mmap.viewPosition[1] <= 0 and \
+        #         self.rect.y >= self.mmap.tileSize[1]:
+        #     self.rect.y += self.mmap.tileSize[1] * -1
+        #     self.mmap.viewUpdate = True
 
-        elif controls[2] and \
-                self.mmap.viewPosition[1] >= self.mmap.mapSize[1] and \
-                self.rect.y <= (self.mmap.viewSize[1] - (self.mmap.tileSize[1] * 2)):
-            self.rect.y += self.mmap.tileSize[1]
-            self.mmap.viewUpdate = True
+        # elif controls[2] and \
+        #         self.mmap.viewPosition[1] >= self.mmap.mapSize[1] and \
+        #         self.rect.y <= (self.mmap.viewSize[1] - (self.mmap.tileSize[1] * 2)):
+        #     self.rect.y += self.mmap.tileSize[1]
+        #     self.mmap.viewUpdate = True
 
-        elif controls[3] and \
-                self.mmap.viewPosition[0] <= 0 and \
-                self.rect.x >= self.mmap.tileSize[0]:
-            self.rect.x += self.mmap.tileSize[0] * -1
-            self.mmap.viewUpdate = True
+        # elif controls[3] and \
+        #         self.mmap.viewPosition[0] <= 0 and \
+        #         self.rect.x >= self.mmap.tileSize[0]:
+        #     self.rect.x += self.mmap.tileSize[0] * -1
+        #     self.mmap.viewUpdate = True
 
-        elif controls[1] and \
-                self.mmap.viewPosition[0] >= self.mmap.mapSize[0] and \
-                self.rect.x <= (self.mmap.viewSize[0] - (self.mmap.tileSize[0] * 2)):
-            self.rect.x += self.mmap.tileSize[0]
-            self.mmap.viewUpdate = True
+        # elif controls[1] and \
+        #         self.mmap.viewPosition[0] >= self.mmap.mapSize[0] and \
+        #         self.rect.x <= (self.mmap.viewSize[0] - (self.mmap.tileSize[0] * 2)):
+        #     self.rect.x += self.mmap.tileSize[0]
+        #     self.mmap.viewUpdate = True
 
-        self.mmap.viewPosition = (vposx, vposy)
+        # self.mmap.viewPosition = (vposx, vposy)
 
     def setAngle(self, controls):
         # up
