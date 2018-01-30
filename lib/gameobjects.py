@@ -190,6 +190,11 @@ class Rover(GameAsset):
 
         # self.mmap.viewPosition = (vposx, vposy)
 
+    def restart(self):
+        self.targetDistance = 0
+        self.mmap.__init__(self.mmap.viewSize, self.mmap.tileSize)
+        self.mmap.viewUpdate = True
+
     def setAngle(self, controls):
         # up
         if controls == (1, 0, 0, 0):

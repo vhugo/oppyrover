@@ -37,6 +37,7 @@ class Terminal(Sprite):
         cmdDrive = re.compile(r"\s*d(rive)?\s*(\d+)\s*(\w{,2})")
         cmdClear = re.compile(r"^c(lear)?$")
         cmdQuit = re.compile(r"^q(uit)?$")
+        cmdRestart = re.compile(r"^r(estart)?$")
         # cmdHelp = re.compile(r"^help$")
 
         match = cmdQuit.match(cmd)
@@ -61,6 +62,13 @@ class Terminal(Sprite):
                     return "driving %d meters %s..." % (distance, d.fullname)
 
             return "can't drive towards '%s'" % direction
+
+        match = cmdRestart.match(cmd)
+        if match:
+            self.linesInput = []
+            self.linesResponse = []
+            self.rover.restart()
+            return None
 
         return "command not found.try 'help'"
 
