@@ -4,18 +4,18 @@ import pygame
 from lib.gameobjects import Rover
 from lib.terminal import Terminal
 from lib.map import Map
-from pygame import QUIT, KEYDOWN, K_ESCAPE
+from pygame import QUIT
 
 pygame.init()
 
 # Dimensions
-w = 1024
-h = 768
+w = 800
+h = 600
 
 # Configuration
 framerate = 60
 screenSize = (w, h)
-tileSize = (50, 50)
+tileSize = (23, 23)
 
 # Setup
 screen = pygame.display.set_mode(screenSize)
@@ -26,17 +26,21 @@ gameObjects = []
 
 # load map
 mmap = Map(screenSize, tileSize)
-screen.blit(mmap.drawMap(), (0, 0))
 
 # load rover
-player = Rover(mmap, "images/player.bmp", 2, (25, 1, 23, 23), (w, h))
+player = Rover(mmap, "images/player.bmp", 1, (25, 1, 23, 23), (w, h))
 gameObjects.append(player)
 
 # load terminal
-terminal = Terminal(30, 6, player)
-terminal.rect.x = screenSize[0] - terminal.image.get_width()
+terminal = Terminal(80, 6, player)
+terminal.rect.x = 0  # screenSize[0] - terminal.image.get_width()
 terminal.rect.y = screenSize[1] - terminal.image.get_height()
 gameObjects.append(terminal)
+
+# draw map
+mapSize = (screenSize[0], screenSize[1] - terminal.image.get_height())
+mmap.viewSize = mapSize
+screen.blit(mmap.drawMap(), (0, 0))
 
 cycle = 0
 running = True
