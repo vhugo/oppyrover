@@ -180,7 +180,7 @@ class Terminal(Sprite):
         self.image = pygame.Surface((self.width, self.height))
 
         lastLineX = 0
-        lastLineY = (self.image.get_height() - self.frameSize[1])
+        lastLineY = (self.image.get_height() - self.frameSize[1]) - 5
 
         lastLineX += self.frameSize[0]
         self.image.blit(

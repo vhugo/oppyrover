@@ -29,6 +29,8 @@ mmap = Map(screenSize, tileSize)
 
 # load rover
 player = Rover(mmap, "images/player.bmp", 1, (25, 1, 23, 23), (w, h))
+player.rect.x = tileSize[0]
+player.rect.y = tileSize[1]
 gameObjects.append(player)
 
 # load terminal
@@ -41,6 +43,7 @@ gameObjects.append(terminal)
 mapSize = (screenSize[0], screenSize[1] - terminal.image.get_height())
 mmap.setViewSize(mapSize)
 screen.blit(mmap.drawMap(), (0, 0))
+screen.blit(mmap.drawMinimap(), (w - mmap.miniMapView[0], 0))
 
 cycle = 0
 running = True
@@ -48,6 +51,7 @@ while running:
 
     if mmap.updated():
         screen.blit(mmap.drawMap(), (0, 0))
+        screen.blit(mmap.drawMinimap(), (w - mmap.miniMapView[0], 0))
 
     for idx, gameObj in enumerate(gameObjects):
         gameObj.update()

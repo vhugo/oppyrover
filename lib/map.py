@@ -1,123 +1,11 @@
 import pygame
+from random import shuffle, randrange
 
 
 class Map(pygame.sprite.Sprite):
-    fullMap = """
-ABCDEFGHIJKLMNOPQRSTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTSRQPONMLKJIHGFEDCBA
-bX....................................................................B
-c.X...................................................................C
-d..X..................................................................D
-e...X.................................................................E
-f....X................................................................F
-g.....X...............................................................G
-h......X..............................................................H
-i.......X.............................................................I
-j........X............................................................J
-k.........X...........................................................K
-l..........X..........................................................L
-m...........X.........................................................M
-n............X........................................................N
-o.............X.......................................................O
-p..............X......................................................P
-q...............X.....................................................Q
-r................X....................................................R
-s.................X...................................................S
-t..................X..................................................T
-t...................X.................................................T
-s....................X................................................S
-r.....................X...............................................R
-q......................X..............................................Q
-p.......................X.............................................P
-o........................X............................................O
-n.........................X...........................................N
-m..........................X..........................................M
-l...........................X.........................................L
-k............................X........................................K
-j.............................X.......................................J
-i..............................X......................................I
-h...............................X.....................................H
-g................................X....................................G
-f.................................X...................................F
-e..................................X..................................E
-d...................................X.................................D
-c....................................X................................C
-b.....................................X...............................B
-a......................................X..............................A
-a.......................................X.............................A
-b........................................X............................B
-c.........................................X...........................C
-d..........................................X..........................D
-e...........................................X.........................E
-f............................................X........................F
-g.............................................X.......................G
-h..............................................X......................H
-i...............................................X.....................I
-j................................................X....................J
-k.................................................X...................K
-l..................................................X..................L
-m...................................................X.................M
-n....................................................X................N
-o.....................................................X...............O
-p......................................................X..............P
-q.......................................................X.............Q
-r........................................................X............R
-s.........................................................X...........S
-t..........................................................X..........T
-t...........................................................X.........T
-s............................................................X........S
-r.............................................................X.......R
-q..............................................................X......Q
-p...............................................................X.....P
-o................................................................X....O
-n.................................................................X...N
-m..................................................................X..M
-l...................................................................X.L
-k....................................................................XK
-abcdefghijklmnopqrstttttttttttttttttttttttttttttttttsrqponmlkjihgfedcba
-    """
     title = {
-        ".": (100, 100, 100),
-        "X": (255, 0, 0),
-        "A": (0, 0, 10),
-        "B": (0, 0, 20),
-        "C": (0, 0, 30),
-        "D": (0, 0, 40),
-        "E": (0, 0, 50),
-        "F": (0, 0, 60),
-        "G": (0, 0, 70),
-        "H": (0, 0, 80),
-        "I": (0, 0, 90),
-        "J": (0, 0, 100),
-        "K": (0, 0, 110),
-        "L": (0, 0, 120),
-        "M": (0, 0, 130),
-        "N": (0, 0, 140),
-        "O": (0, 0, 150),
-        "P": (0, 0, 160),
-        "Q": (0, 0, 170),
-        "R": (0, 0, 180),
-        "S": (0, 0, 190),
-        "T": (0, 0, 200),
-        "a": (0, 10, 0),
-        "b": (0, 20, 0),
-        "c": (0, 30, 0),
-        "d": (0, 40, 0),
-        "e": (0, 50, 0),
-        "f": (0, 60, 0),
-        "g": (0, 70, 0),
-        "h": (0, 80, 0),
-        "i": (0, 90, 0),
-        "j": (0, 100, 0),
-        "k": (0, 110, 0),
-        "l": (0, 120, 0),
-        "m": (0, 130, 0),
-        "n": (0, 140, 0),
-        "o": (0, 150, 0),
-        "p": (0, 160, 0),
-        "q": (0, 170, 0),
-        "r": (0, 180, 0),
-        "s": (0, 190, 0),
-        "t": (0, 200, 0),
+        ".": (255, 188, 108),
+        "X": (252, 141, 0),
     }
 
     def __init__(self, viewSize, tileSize):
@@ -128,52 +16,124 @@ abcdefghijklmnopqrstttttttttttttttttttttttttttttttttsrqponmlkjihgfedcba
         self.currentViewPosition = (0, 0)
         self.viewPosition = (0, 0)
         self.viewUpdate = False
+        self.generateMazeMap()
         self.loadMap()
 
+    def generateMazeMap(self):
+        w = 5
+        h = 15
+        vis = [[0] * w + [1] for _ in range(h)] + [[1] * (w + 1)]
+        ver = [["X......"] * w + ['X'] for _ in range(h)] + [[]]
+        hor = [["XXXXXXX"] * w + ['X'] for _ in range(h + 1)]
+
+        def walk(x, y):
+            vis[y][x] = 1
+
+            d = [(x - 1, y), (x, y + 1), (x + 1, y), (x, y - 1)]
+            shuffle(d)
+            for (xx, yy) in d:
+                if vis[yy][xx]:
+                    continue
+                if xx == x:
+                    hor[max(y, yy)][x] = "X......"
+                if yy == y:
+                    ver[y][max(x, xx)] = "......."
+                walk(xx, yy)
+
+        walk(randrange(w), randrange(h))
+
+        s = "\n"
+        for (a, b) in zip(hor, ver):
+            s += ''.join(
+                a + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'] +
+                b + ['\n'])
+        self.fullMap = s
+
     def loadMap(self):
+        x = 0
+        y = 1
         mapYs = [m for m in self.fullMap.split("\n")[:-1]]
         self.mapArray = [[my for my in m] for m in mapYs[1:]]
 
-        self.fullMapHeight = self.tileSize[1] * len(mapYs[1:])
-        self.fullMapWidth = self.tileSize[0] * len(self.mapArray[0])
+        fullMapWidth = self.tileSize[x] * len(self.mapArray[0])
+        fullMapHeight = self.tileSize[y] * len(mapYs[1:])
+        self.fullMapSize = (fullMapWidth, fullMapHeight)
 
         # We need only what we can fit on the screen
-        mapWidth = self.fullMapWidth - self.viewSize[0]
-        mapHeight = self.fullMapHeight - self.viewSize[1]
+        mapWidth = self.fullMapSize[x] - self.viewSize[x]
+        mapHeight = self.fullMapSize[y] - self.viewSize[y]
         self.mapSize = (mapWidth, mapHeight)
 
     def setViewSize(self, viewSize):
-        mapWidth = self.fullMapWidth - viewSize[0]
-        mapHeight = self.fullMapHeight - viewSize[1]
+        x = 0
+        y = 1
+        mapWidth = self.fullMapSize[x] - viewSize[x]
+        mapHeight = self.fullMapSize[y] - viewSize[y]
         self.viewSize = viewSize
         self.mapSize = (mapWidth, mapHeight)
 
     def updated(self):
-        return (self.currentViewPosition[0] != self.viewPosition[0] or
-                self.currentViewPosition[1] != self.viewPosition[1] or
+        x = 0
+        y = 1
+        return (self.currentViewPosition[x] != self.viewPosition[x] or
+                self.currentViewPosition[y] != self.viewPosition[y] or
                 self.viewUpdate)
 
-    def drawMap(self):
-        self.reset()
-        mapSurface = pygame.Surface(self.viewSize)
+    def drawMinimap(self):
+        self.miniMapView = (72, 242)
+        mapSurface = pygame.Surface(self.miniMapView)
 
-        viewX = int(self.viewPosition[0] / self.tileSize[0])
-        viewY = int(self.viewPosition[1] / self.tileSize[1])
+        for yidx, xmap in enumerate(self.mapArray):
+            moveY = (2 * yidx)
 
-        for yidx, xmap in enumerate(self.mapArray[viewY:]):
-            yidx += viewY
-            moveY = (self.tileSize[1] * yidx) - self.viewPosition[1]
-
-            for xidx, xym in enumerate(xmap[viewX:]):
-                xidx += viewX
-                moveX = (self.tileSize[0] * xidx) - self.viewPosition[0]
+            for xidx, xym in enumerate(xmap):
+                moveX = (2 * xidx)
 
                 terrain = pygame.Rect(
-                    moveX, moveY, self.tileSize[0], self.tileSize[1])
+                    moveX, moveY, 2, 2)
 
                 pygame.draw.rect(mapSurface, self.title[xym], terrain)
 
                 if moveX >= self.viewSize[0] and moveY >= self.viewSize[1]:
+                    return mapSurface
+
+        for yidx, xmap in enumerate(self.mapArray):
+            for xidx, xym in enumerate(xmap):
+                terrain = pygame.Rect(0, 0, 2, 2)
+
+                pygame.draw.rect(mapSurface, self.title[xym], terrain)
+
+        return mapSurface
+
+    def drawMap(self):
+        x = 0
+        y = 0
+        self.reset()
+        mapSurface = pygame.Surface(self.viewSize)
+
+        viewX = int(self.viewPosition[x] / self.tileSize[x])
+        viewY = int(self.viewPosition[y] / self.tileSize[y])
+
+        for yidx, xmap in enumerate(self.mapArray[viewY:]):
+            yidx += viewY
+            moveY = (self.tileSize[y] * yidx) - self.viewPosition[y]
+
+            for xidx, xym in enumerate(xmap[viewX:]):
+                xidx += viewX
+                moveX = (self.tileSize[x] * xidx) - self.viewPosition[x]
+
+                terrain = pygame.Rect(
+                    moveX, moveY, self.tileSize[x], self.tileSize[y])
+
+                pygame.draw.rect(mapSurface, self.title[xym], terrain)
+
+                if moveX >= self.viewSize[x] and moveY >= self.viewSize[y]:
                     return mapSurface
 
         return mapSurface
