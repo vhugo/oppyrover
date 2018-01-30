@@ -79,14 +79,14 @@ class Rover(GameAsset):
         # map moviment
         vposx = self.mmap.viewPosition[x]
         vposy = self.mmap.viewPosition[y]
-        if self.rect.x == 0 or self.rect.x == self.mmap.tileSize[x]:
+        if self.rect.x <= self.mmap.tileSize[x]:
             vposx = self.mmap.viewPosition[x] + (travel * direction[x])
             if vposx > self.mmap.mapSize[x]:
                 vposx = self.mmap.mapSize[x]
             elif vposx < 0:
                 vposx = 0
 
-        if self.rect.y == 0 or self.rect.y == self.mmap.tileSize[y]:
+        if self.rect.y <= self.mmap.tileSize[y]:
             vposy = self.mmap.viewPosition[y] + (travel * direction[y])
             if vposy > self.mmap.mapSize[y]:
                 vposy = self.mmap.mapSize[y]

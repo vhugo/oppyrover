@@ -113,7 +113,7 @@ class Map(pygame.sprite.Sprite):
 
     def drawMap(self):
         x = 0
-        y = 0
+        y = 1
         self.reset()
         mapSurface = pygame.Surface(self.viewSize)
 
@@ -139,5 +139,5 @@ class Map(pygame.sprite.Sprite):
         return mapSurface
 
     def reset(self):
-        self.viewUpdate = 0
+        self.viewUpdate = False
         self.currentViewPosition = self.viewPosition

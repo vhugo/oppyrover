@@ -45,7 +45,6 @@ mmap.setViewSize(mapSize)
 screen.blit(mmap.drawMap(), (0, 0))
 screen.blit(mmap.drawMinimap(), (w - mmap.miniMapView[0], 0))
 
-cycle = 0
 running = True
 while running:
 
@@ -56,8 +55,6 @@ while running:
     for idx, gameObj in enumerate(gameObjects):
         gameObj.update()
         screen.blit(gameObj.image, (gameObj.rect.x, gameObj.rect.y))
-
-    cycle += 1
 
     for event in pygame.event.get():
         if event.type == QUIT:
