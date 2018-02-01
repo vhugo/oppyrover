@@ -1,5 +1,27 @@
 import pygame
 from random import shuffle, randrange
+class MapGrid():
+
+    def __init__(self, mapSize, tileSize, columns, rows):
+        self.image = self.asset = pygame.Surface(mapSize)
+        self.image.set_colorkey(self.image.get_at((0, 0)))
+        # self.image.set_alpha(90)
+
+        white = (255, 255, 255)
+        x, y = (0, 1)
+        for xidx in range(columns):
+            pygame.draw.line(
+                self.image,
+                white,
+                ((tileSize[x] * xidx), 0),
+                ((tileSize[y] * xidx), mapSize[y]))
+
+        for yidx in range(rows):
+            pygame.draw.line(
+                self.image,
+                white,
+                (0, (tileSize[y] * yidx)),
+                (mapSize[x], (tileSize[x] * yidx)))
 
 
 class Map(pygame.sprite.Sprite):

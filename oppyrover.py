@@ -3,7 +3,7 @@ import pygame
 
 from lib.gameobjects import Rover
 from lib.terminal import Terminal
-from lib.map import Map
+from lib.map import Map, MapGrid
 from pygame import QUIT
 
 pygame.init()
@@ -42,8 +42,10 @@ gameObjects.append(terminal)
 # draw map
 mapSize = (screenSize[0], screenSize[1] - terminal.image.get_height())
 mmap.setViewSize(mapSize)
+mapGrid = MapGrid(mapSize, tileSize, 35, 21)
 screen.blit(mmap.drawMap(), (0, 0))
-screen.blit(mmap.drawMinimap(), (w - mmap.miniMapView[0], 0))
+screen.blit(mapGrid.image, (0, 0))
+screen.blit(mmap.drawMinimap(), (w - mmap.minimapView[0], 0))
 
 running = True
 while running:
