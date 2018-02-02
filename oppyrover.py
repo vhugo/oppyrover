@@ -1,5 +1,6 @@
 import sys
 import pygame
+import time
 
 from lib.gameobjects import Rover
 from lib.terminal import Terminal
@@ -8,14 +9,12 @@ from pygame import QUIT
 
 pygame.init()
 
-# Dimensions
-w = 800
-h = 600
-
 # Configuration
+x, y = (0, 1)
 framerate = 60
-screenSize = (w, h)
+screenSize = (800, 600)
 tileSize = (23, 23)
+terminalSize = (80, 6)  # columns and lines
 
 # Setup
 screen = pygame.display.set_mode(screenSize)
@@ -25,42 +24,68 @@ clock = pygame.time.Clock()
 gameObjects = []
 
 # load map
-mmap = Map(screenSize, tileSize)
+gmap = Map(screenSize, tileSize)
 
 # load rover
-player = Rover(mmap, "images/player.bmp", 1, (25, 1, 23, 23), (w, h))
-player.rect.x = tileSize[0]
-player.rect.y = tileSize[1]
+player = Rover(gmap)
+player.rect.x = tileSize[x]
+player.rect.y = tileSize[y]
 gameObjects.append(player)
 
 # load terminal
-terminal = Terminal(80, 6, player)
-terminal.rect.x = 0  # screenSize[0] - terminal.image.get_width()
-terminal.rect.y = screenSize[1] - terminal.image.get_height()
+terminal = Terminal(terminalSize[x], terminalSize[y], player)
+terminal.rect.x = 0  # screenSize[x] - terminal.image.get_width()
+terminal.rect.y = screenSize[y] - terminal.image.get_height()
 gameObjects.append(terminal)
 
-# draw map
-mapSize = (screenSize[0], screenSize[1] - terminal.image.get_height())
-mmap.setViewSize(mapSize)
+# measurements before render
+mapSize = (  # (screenSize[x] - gmap.minimapView[x]),
+    screenSize[x],
+    (screenSize[y] - terminal.image.get_height()))
+gmap.setViewSize(mapSize)
 mapGrid = MapGrid(mapSize, tileSize, 35, 21)
-screen.blit(mmap.drawMap(), (0, 0))
-screen.blit(mapGrid.image, (0, 0))
-screen.blit(mmap.drawMinimap(), (w - mmap.minimapView[0], 0))
+mmapPos = (screenSize[x] - gmap.minimapView[x], 0)
+
+# Render map, grid and minimap
+# screen.blit(gmap.drawMap(), (0, 0))
+# screen.blit(mapGrid.image, (0, 0))
+# screen.blit(gmap.minimap, mmapPos)
 
 running = True
 while running:
 
-    if mmap.updated():
-        screen.blit(mmap.drawMap(), (0, 0))
-        screen.blit(mmap.drawMinimap(), (w - mmap.miniMapView[0], 0))
+    start = time.time()
+
+    if gmap.updated():
+        # print("Map")
+        screen.blit(gmap.map, (0, 0))
+        gadgetUpdated = True
+        gmap.onUpdate()
 
     for idx, gameObj in enumerate(gameObjects):
         gameObj.update()
-        screen.blit(gameObj.image, (gameObj.rect.x, gameObj.rect.y))
+        if gameObj.updated or gadgetUpdated:
+            screen.blit(gameObj.image, (gameObj.rect.x, gameObj.rect.y))
+            pygame.display.update(gameObj.rect)
+            gameObj.updated = False
+
+    if gadgetUpdated:
+        # print("Grid and Minimap")
+        screen.blit(mapGrid.image, (0, 0))
+        screen.blit(gmap.minimap, mmapPos)
+        gadgetUpdated = False
+        pygame.display.flip()
+
+    end = time.time()
+    elapse = (end - start) * 1000
+
+    # if elapse > 1.0:
+    #     print(
+    #         "elapse: %10f - time: %10f - rawtime: %10f - fps: %10f" %
+    #         (elapse, clock.get_rawtime(), clock.get_time(), clock.get_fps()))
 
     for event in pygame.event.get():
         if event.type == QUIT:
             sys.exit()
 
-    pygame.display.flip()
     clock.tick(framerate)
