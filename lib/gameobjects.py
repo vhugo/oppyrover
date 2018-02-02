@@ -5,20 +5,21 @@ from enum import Enum
 
 
 class Direction(Enum):
-    NORTH = ("n", "north", 0, -1)
-    NORTHEAST = ("ne", "northeast", 1, -1)
-    EAST = ("e", "east", 1, 0)
-    SOUTHEAST = ("se", "southeast", 1, 1)
-    SOUTH = ("s", "south", 0, 1)
-    SOUTHWEST = ("sw", "southwest", -1, 1)
-    WEST = ("w", "west", -1, 0)
-    NORTHWEST = ("nw", "northwest", -1, -1)
+    NORTH = ("n", "north", 0, -1, 0)
+    NORTHEAST = ("ne", "northeast", 1, -1, 315)
+    EAST = ("e", "east", 1, 0, 270)
+    SOUTHEAST = ("se", "southeast", 1, 1, 225)
+    SOUTH = ("s", "south", 0, 1, 180)
+    SOUTHWEST = ("sw", "southwest", -1, 1, 135)
+    WEST = ("w", "west", -1, 0, 90)
+    NORTHWEST = ("nw", "northwest", -1, -1, 45)
 
-    def __init__(self, shortname, fullname, x, y):
+    def __init__(self, shortname, fullname, x, y, angle):
         self.shortname = shortname
         self.fullname = fullname
         self.x = x
         self.y = y
+        self.angle = angle
 
     @property
     def xy(self):
@@ -30,6 +31,7 @@ class Sprite(pygame.sprite.Sprite):
     def __init__(self, asset):
         self.sprite = []
         self.asset = asset
+        self.updated = True
         self.loadSprite()
 
     def loadSprite(self):
@@ -38,12 +40,13 @@ class Sprite(pygame.sprite.Sprite):
 
 class GameAsset(pygame.sprite.Sprite):
 
-    def __init__(self, mmap, image, scale, area, bounds):
+    def __init__(self, gmap, image, scale, area):
+        self.gmap = gmap
+        self.updated = True
         self.image = self.asset = imageLoader(image, scale, area)
         self.image.set_colorkey(self.image.get_at((0, 0)))
         self.rect = self.image.get_rect()
-
-        self.mmap = mmap
+        self.collision = False
 
     def update(self):
         pass
@@ -52,14 +55,20 @@ class GameAsset(pygame.sprite.Sprite):
 class Rover(GameAsset):
     targetDistance = 0
     targetDirection = (0, 0)
-    speed = 1
+    speed = 3
+
+    def __init__(self, gmap):
+        super().__init__(gmap, "images/player.bmp", 1, (25, 1, 23, 23))
 
     def drive(self, distance, direction):
-        self.targetDistance = self.mmap.tileSize[0] * distance
+        self.targetDistance = self.gmap.tileSize[0] * distance
         self.targetDirection = direction
 
     def update(self):
-        self.setMotion()
+        self.checkForCollisions()
+
+        if not self.collision:
+            self.setMotion()
 
         # Continue update
         super().update()
@@ -69,161 +78,109 @@ class Rover(GameAsset):
             return
         else:
             self.targetDistance -= self.speed
+            self.updated = True
+            self.gmap.refresh()
 
-        x = 0
-        y = 1
-
+        x, y = (0, 1)
         direction = self.targetDirection
         travel = self.speed
+        bounds = (self.gmap.tileSize[x] * 3, self.gmap.tileSize[y])
+        mapmoved = True
 
         # map moviment
-        vposx = self.mmap.viewPosition[x]
-        vposy = self.mmap.viewPosition[y]
-        if self.rect.x <= self.mmap.tileSize[x]:
-            vposx = self.mmap.viewPosition[x] + (travel * direction[x])
-            if vposx > self.mmap.mapSize[x]:
-                vposx = self.mmap.mapSize[x]
+        vposx = self.gmap.viewPosition[x]
+        vposy = self.gmap.viewPosition[y]
+        halfwayx = (self.gmap.viewSize[x] / 2)
+        halfwayy = (self.gmap.viewSize[y] / 2)
+        if self.rect.x > halfwayx:
+            vposx = self.gmap.viewPosition[x] + (travel * direction[x])
+            if vposx > self.gmap.mapSize[x]:
+                vposx = self.gmap.mapSize[x]
+            # elif vposx > 0 and vposx <= self.gmap.tileSize[x]:
+            #     vposx = self.gmap.tileSize[x]
             elif vposx < 0:
                 vposx = 0
 
-        if self.rect.y <= self.mmap.tileSize[y]:
-            vposy = self.mmap.viewPosition[y] + (travel * direction[y])
-            if vposy > self.mmap.mapSize[y]:
-                vposy = self.mmap.mapSize[y]
+        if self.rect.y > halfwayy:
+            vposy = self.gmap.viewPosition[y] + (travel * direction[y])
+            if vposy > self.gmap.mapSize[y]:
+                vposy = self.gmap.mapSize[y]
+            # elif vposy > 0 and vposy <= self.gmap.tileSize[y]:
+            #     vposy = self.gmap.tileSize[y]
             elif vposy < 0:
                 vposy = 0
 
-        self.mmap.viewPosition = (vposx, vposy)
+        if (vposx, vposy) != self.gmap.viewPosition:
+            self.gmap.viewPosition = (vposx, vposy)
+        else:
+            mapmoved = False
 
         #  Rover moviment
-        if self.mmap.viewPosition[x] == self.mmap.mapSize[x]:
-            mxmapX = self.mmap.viewSize[x] - self.mmap.tileSize[x]
-            roverX = self.rect.x + (travel * direction[x])
+        rectx = self.rect.x
+        recty = self.rect.y
+        if rectx <= halfwayx or \
+                self.gmap.viewPosition[x] == self.gmap.mapSize[x]:
+            mxmapX = self.gmap.viewSize[x] - bounds[x]
+            roverX = rectx + (travel * direction[x])
 
             if direction[x] > 0 and roverX > mxmapX:
-                self.rect.x = mxmapX
+                rectx = mxmapX
 
             elif direction[x] < 0 and roverX < 0:
-                self.rect.x = 0
+                rectx = 0
 
             else:
-                self.rect.x = roverX
+                rectx = roverX
 
-            self.mmap.viewUpdate = True
-
-        if self.mmap.viewPosition[y] == self.mmap.mapSize[y]:
-            mxmapY = self.mmap.viewSize[y] - self.mmap.tileSize[y]
-            roverY = self.rect.y + (travel * direction[y])
+        if recty <= halfwayy or \
+                self.gmap.viewPosition[y] == self.gmap.mapSize[x]:
+            mxmapY = self.gmap.viewSize[y] - bounds[y]
+            roverY = recty + (travel * direction[y])
 
             if direction[y] > 0 and roverY > mxmapY:
-                self.rect.y = mxmapY
+                recty = mxmapY
 
             elif direction[y] < 0 and roverY < 0:
-                self.rect.y = 0
+                recty = 0
 
             else:
-                self.rect.y = roverY
+                recty = roverY
 
-            self.mmap.viewUpdate = True
+        if (rectx, recty) != (self.rect.x, self.rect.y):
+            self.rect.x = rectx
+            self.rect.y = recty
+        elif not mapmoved:
+            self.targetDistance = 0
 
-        # print(
-        #     "%5d:rect.x" % self.rect.x,
-        #     "%5d:rect.y" % self.rect.y,
-        #     "%5d:vposx" % vposx,
-        #     "%5d:vposy" % vposy,
-        #     "viewSize %5d:x %5d:y" % self.mmap.viewSize,
-        #     "viewPosition: %5d:x %5d:y" % self.mmap.viewPosition,
-        #     "mapSize: %5d:x %5d:y" % self.mmap.mapSize)
+        print(
+            "%5d:target" % self.targetDistance,
+            "%5d:rect.x" % self.rect.x,
+            "%5d:rect.y" % self.rect.y,
+            "%5d:vposx" % vposx,
+            "%5d:vposy" % vposy,
+            "viewSize %5d:x %5d:y" % self.gmap.viewSize,
+            "viewPosition: %5d:x %5d:y" % self.gmap.viewPosition,
+            "mapSize: %5d:x %5d:y" % self.gmap.mapSize)
 
-        # vposx = self.mmap.viewPosition[0]
-        # vposy = self.mmap.viewPosition[1]
+    def checkForCollisions(self):
+        pass
+        # for idx, mpoint in enumerate(self.gmap.mapArray):
 
-        # # map position
-        # if controls[0] and self.mmap.viewPosition[1] > 0:
-        #     vposy += self.mmap.tileSize[1] * -1
+        #     if mpoint != ".":
+        #         self.collision = self.rect.colliderect(asset.rect)
+        #         print("COLLISION", self.collisionCause.__class__.__name__)
+        #         self.collision = True
+        #         break
 
-        # elif controls[2] and self.mmap.viewPosition[1] < self.mmap.mapSize[1]:
-        #     vposy += self.mmap.tileSize[1]
-
-        # elif controls[3] and self.mmap.viewPosition[0] > 0:
-        #     vposx += self.mmap.tileSize[0] * -1
-
-        # elif controls[1] and self.mmap.viewPosition[0] < self.mmap.mapSize[0]:
-        #     vposx += self.mmap.tileSize[0]
-
-        # print(
-        #     "rectX: %5d" % self.rect.x,
-        #     "viewSize: %5d" % self.mmap.viewSize[0],
-        #     "viewPosition: %5d" % self.mmap.viewPosition[0],
-        #     "mapSize: %5d" % self.mmap.mapSize[0])
-
-        # print(
-        #     "rect: %5d" % self.rect.y,
-        #     "viewSize: %5d" % self.mmap.viewSize[1],
-        #     "viewPosition: %5d" % self.mmap.viewPosition[1],
-        #     "mapSize: %5d" % self.mmap.mapSize[1])
-
-        # rover position
-        # if controls[0] and \
-        #         self.mmap.viewPosition[1] <= 0 and \
-        #         self.rect.y >= self.mmap.tileSize[1]:
-        #     self.rect.y += self.mmap.tileSize[1] * -1
-        #     self.mmap.viewUpdate = True
-
-        # elif controls[2] and \
-        #         self.mmap.viewPosition[1] >= self.mmap.mapSize[1] and \
-        #         self.rect.y <= (self.mmap.viewSize[1] - (self.mmap.tileSize[1] * 2)):
-        #     self.rect.y += self.mmap.tileSize[1]
-        #     self.mmap.viewUpdate = True
-
-        # elif controls[3] and \
-        #         self.mmap.viewPosition[0] <= 0 and \
-        #         self.rect.x >= self.mmap.tileSize[0]:
-        #     self.rect.x += self.mmap.tileSize[0] * -1
-        #     self.mmap.viewUpdate = True
-
-        # elif controls[1] and \
-        #         self.mmap.viewPosition[0] >= self.mmap.mapSize[0] and \
-        #         self.rect.x <= (self.mmap.viewSize[0] - (self.mmap.tileSize[0] * 2)):
-        #     self.rect.x += self.mmap.tileSize[0]
-        #     self.mmap.viewUpdate = True
-
-        # self.mmap.viewPosition = (vposx, vposy)
+        # for asset in self.collisionGroup:
+        #     self.collision = self.rect.colliderect(asset.rect)
+        #     if self.collision:
+        #         self.collisionCause = asset
+        #         print("COLLISION", self.collisionCause.__class__.__name__)
+        #         self.onCollision()
+        #         break
 
     def restart(self):
         self.targetDistance = 0
-        self.mmap.__init__(self.mmap.viewSize, self.mmap.tileSize)
-        self.mmap.viewUpdate = True
-
-    def setAngle(self, controls):
-        # up
-        if controls == (1, 0, 0, 0):
-            self.angle = 0
-
-        # right + up
-        elif controls == (1, 1, 0, 0):
-            self.angle = 315
-
-        # right
-        elif controls == (0, 1, 0, 0):
-            self.angle = 270
-
-        # right + down
-        elif controls == (0, 1, 1, 0):
-            self.angle = 225
-
-        # down
-        elif controls == (0, 0, 1, 0):
-            self.angle = 180
-
-        # left + down
-        elif controls == (0, 0, 1, 1):
-            self.angle = 135
-
-        # left
-        elif controls == (0, 0, 0, 1):
-            self.angle = 90
-
-        # left + up
-        elif controls == (1, 0, 0, 1):
-            self.angle = 45
+        self.gmap.__init__(self.gmap.viewSize, self.gmap.tileSize)
+        self.gmap.viewUpdate = True
