@@ -119,6 +119,7 @@ class Rover(GameAsset):
         rectx = self.rect.x
         recty = self.rect.y
         if rectx <= halfwayx or \
+            (rectx > halfwayx and direction[x] < 0) or \
                 self.gmap.viewPosition[x] == self.gmap.mapSize[x]:
             mxmapX = self.gmap.viewSize[x] - bounds[x]
             roverX = rectx + (travel * direction[x])
@@ -132,8 +133,8 @@ class Rover(GameAsset):
             else:
                 rectx = roverX
 
-        if recty <= halfwayy or \
-                self.gmap.viewPosition[y] == self.gmap.mapSize[x]:
+        if (recty <= halfwayy and direction[y] > 0) or \
+                self.gmap.viewPosition[y] == self.gmap.mapSize[y]:
             mxmapY = self.gmap.viewSize[y] - bounds[y]
             roverY = recty + (travel * direction[y])
 
@@ -149,18 +150,18 @@ class Rover(GameAsset):
         if (rectx, recty) != (self.rect.x, self.rect.y):
             self.rect.x = rectx
             self.rect.y = recty
+
         elif not mapmoved:
             self.targetDistance = 0
 
         print(
-            "%5d:target" % self.targetDistance,
-            "%5d:rect.x" % self.rect.x,
-            "%5d:rect.y" % self.rect.y,
-            "%5d:vposx" % vposx,
-            "%5d:vposy" % vposy,
-            "viewSize %5d:x %5d:y" % self.gmap.viewSize,
-            "viewPosition: %5d:x %5d:y" % self.gmap.viewPosition,
-            "mapSize: %5d:x %5d:y" % self.gmap.mapSize)
+            "%5d:tgt" % self.targetDistance,
+            "drct(%2d,%2d)" % direction,
+            "rect(%3d,%3d)" % (self.rect.x, self.rect.y),
+            "vpos(%3d,%3d)" % (vposx, vposy),
+            "mvsz(%3d,%3d)" % self.gmap.viewSize,
+            "mvps(%5d,%5d)" % self.gmap.viewPosition,
+            "msiz(%5d,%5d)" % self.gmap.mapSize)
 
     def checkForCollisions(self):
         pass
