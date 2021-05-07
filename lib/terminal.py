@@ -166,10 +166,13 @@ class Terminal(Sprite):
 
             else:
                 if self.allowNewLineEntry():
-                    key = self.availableKeys.find(chr(event.key))
-                    if key >= 0:
-                        self.newLine.append(key)
-                        self.onUpdate()
+                    try:
+                        key = self.availableKeys.find(chr(event.key))
+                        if key >= 0:
+                            self.newLine.append(key)
+                            self.onUpdate()
+                    except ValueError:
+                        pass
 
     def pushNewLine(self):
         self.linesHistory.append(self.newLine)
